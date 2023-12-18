@@ -1,39 +1,57 @@
-import * as React from 'react';
-import * as ReactDom from 'react-dom';
-import { Version } from '@microsoft/sp-core-library';
+import * as React from "react";
+import * as ReactDom from "react-dom";
+import { Version } from "@microsoft/sp-core-library";
 import {
   IPropertyPaneConfiguration,
   PropertyPaneTextField,
   PropertyPaneDropdown,
   IPropertyPaneDropdownOption,
-  PropertyPaneLabel
-} from '@microsoft/sp-property-pane';
-import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
-import { IReadonlyTheme } from '@microsoft/sp-component-base';
-import { PropertyFieldDateTimePicker, DateConvention, IDateTimeFieldValue } from '@pnp/spfx-property-controls/lib/PropertyFieldDateTimePicker';
-import * as strings from 'CalenderWebPartStrings';
-import Calender from './components/Calender';
-import { ICalenderProps } from './components/ICalenderProps';
-import * as moment from 'moment';
+  PropertyPaneLabel,
+} from "@microsoft/sp-property-pane";
+import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
+import { IReadonlyTheme } from "@microsoft/sp-component-base";
+import {
+  PropertyFieldDateTimePicker,
+  DateConvention,
+  IDateTimeFieldValue,
+} from "@pnp/spfx-property-controls/lib/PropertyFieldDateTimePicker";
+import * as strings from "CalenderWebPartStrings";
+import Calender from "./components/Calender";
+import { ICalenderProps } from "./components/ICalenderProps";
+import * as moment from "moment";
+
+import "@pnp/sp/webs";
+import "@pnp/sp/lists";
+import "@pnp/sp/items";
+import "@pnp/sp/regional-settings/web";
+import "@pnp/sp/navigation/web";
+import "@pnp/sp/site-users/web";
+import "@pnp/sp/profiles";
+import "@pnp/sp/fields";
+
+import spservices from "../../services/spservices";
+import { spfi, SPFI, SPFx } from "@pnp/sp";
+import { graphfi, GraphFI, SPFx as graphSPFx } from "@pnp/graph";
 
 export interface ICalenderWebPartProps {
   description: string;
   title: string;
   siteUrl: string;
   list: string;
-  eventStartDate: IDateTimeFieldValue ;
+  eventStartDate: IDateTimeFieldValue;
   eventEndDate: IDateTimeFieldValue;
   errorMessage: string;
 }
 
 export default class CalenderWebPart extends BaseClientSideWebPart<ICalenderWebPartProps> {
-
   private _isDarkTheme: boolean = false;
-  private _environmentMessage: string = '';
+  private _environmentMessage: string = "";
   private lists: IPropertyPaneDropdownOption[] = [];
   private listsDropdownDisabled: boolean = true;
-  // private spService: spservices = null;
+  private spService: spservices = null;
   private errorMessage: string;
+  private sp: SPFI = null;
+  private graph: GraphFI = null;
 
   public render(): void {
     const element: React.ReactElement<ICalenderProps> = React.createElement(
@@ -43,7 +61,7 @@ export default class CalenderWebPart extends BaseClientSideWebPart<ICalenderWebP
         isDarkTheme: this._isDarkTheme,
         environmentMessage: this._environmentMessage,
         hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName
+        userDisplayName: this.context.pageContext.user.displayName,
       }
     );
 
@@ -51,37 +69,83 @@ export default class CalenderWebPart extends BaseClientSideWebPart<ICalenderWebP
   }
 
   protected onInit(): Promise<void> {
-    return this._getEnvironmentMessage().then(message => {
+    this.sp = spfi().using(SPFx(this.context));
+    this.graph = graphfi().using(graphSPFx(this.context));
+    this.spService = new spservices(this.sp, this.graph);
+    this.properties.siteUrl = this.properties.siteUrl
+      ? this.properties.siteUrl
+      : this.context.pageContext.site.absoluteUrl;
+
+    return this._getEnvironmentMessage().then((message) => {
       this._environmentMessage = message;
     });
   }
 
+  private async loadLists(): Promise<IPropertyPaneDropdownOption[]> {
+    const _lists: IPropertyPaneDropdownOption[] = [];
+    try {
+      const results = await this.spService.getSiteLists(
+        this.properties.siteUrl
+      );
+      for (const list of results) {
+        _lists.push({ key: list.Id, text: list.Title });
+      }
+      // push new item value
+    } catch (error) {
+      this.errorMessage = `${error.message} -  please check if site url if valid.`;
+      this.context.propertyPane.refresh();
+    }
+    return _lists;
+  }
 
+  GetCalenderList = async () => {
+    if (!this.properties.eventStartDate) {
+      this.properties.eventStartDate = {
+        value: moment().subtract(2, "years").startOf("month").toDate(),
+        displayValue: moment().format("ddd MMM MM YYYY"),
+      };
+    }
+    if (!this.properties.eventEndDate) {
+      this.properties.eventEndDate = {
+        value: moment().add(20, "years").endOf("month").toDate(),
+        displayValue: moment().format("ddd MMM MM YYYY"),
+      };
+    }
+    if (this.properties.siteUrl && !this.properties.list) {
+      const _lists = await this.loadLists();
+      if (_lists.length > 0) {
+        this.lists = _lists;
+        this.properties.list = this.lists[0].key.toString();
+      }
+    }
+  };
 
   private _getEnvironmentMessage(): Promise<string> {
-    if (!!this.context.sdks.microsoftTeams) { // running in Teams, office.com or Outlook
-      return this.context.sdks.microsoftTeams.teamsJs.app.getContext()
-        .then(context => {
-          let environmentMessage: string = '';
+    if (!!this.context.sdks.microsoftTeams) {
+      // running in Teams, office.com or Outlook
+      return this.context.sdks.microsoftTeams.teamsJs.app
+        .getContext()
+        .then((context) => {
+          let environmentMessage: string = "";
           switch (context.app.host.name) {
-            case 'Office': // running in Office
-              environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentOffice : strings.AppOfficeEnvironment;
-              break;
-            case 'Outlook': // running in Outlook
-              environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentOutlook : strings.AppOutlookEnvironment;
-              break;
-            case 'Teams': // running in Teams
-              environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentTeams : strings.AppTeamsTabEnvironment;
+            case "Office": // running in Office
+              environmentMessage = this.context.isServedFromLocalhost
+                ? strings.AppLocalEnvironmentOffice
+                : strings.AppOfficeEnvironment;
               break;
             default:
-              throw new Error('Unknown host');
+              throw new Error("Unknown host");
           }
 
           return environmentMessage;
         });
     }
 
-    return Promise.resolve(this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentSharePoint : strings.AppSharePointEnvironment);
+    return Promise.resolve(
+      this.context.isServedFromLocalhost
+        ? strings.AppLocalEnvironmentSharePoint
+        : strings.AppSharePointEnvironment
+    );
   }
 
   protected onThemeChanged(currentTheme: IReadonlyTheme | undefined): void {
@@ -90,16 +154,19 @@ export default class CalenderWebPart extends BaseClientSideWebPart<ICalenderWebP
     }
 
     this._isDarkTheme = !!currentTheme.isInverted;
-    const {
-      semanticColors
-    } = currentTheme;
+    const { semanticColors } = currentTheme;
 
     if (semanticColors) {
-      this.domElement.style.setProperty('--bodyText', semanticColors.bodyText || null);
-      this.domElement.style.setProperty('--link', semanticColors.link || null);
-      this.domElement.style.setProperty('--linkHovered', semanticColors.linkHovered || null);
+      this.domElement.style.setProperty(
+        "--bodyText",
+        semanticColors.bodyText || null
+      );
+      this.domElement.style.setProperty("--link", semanticColors.link || null);
+      this.domElement.style.setProperty(
+        "--linkHovered",
+        semanticColors.linkHovered || null
+      );
     }
-
   }
 
   protected onDispose(): void {
@@ -107,22 +174,22 @@ export default class CalenderWebPart extends BaseClientSideWebPart<ICalenderWebP
   }
 
   protected get dataVersion(): Version {
-    return Version.parse('1.0');
+    return Version.parse("1.0");
   }
 
-  private onEventStartDateValidation(date:string){
-    if (date && this.properties.eventEndDate.value){
-      if (moment(date).isAfter(moment(this.properties.eventEndDate.value))){
+  private onEventStartDateValidation(date: string) {
+    if (date && this.properties.eventEndDate.value) {
+      if (moment(date).isAfter(moment(this.properties.eventEndDate.value))) {
         return "start date is greater than end date";
       }
     }
-    return '';
+    return "";
   }
 
   private onSiteUrlGetErrorMessage(value: string) {
-    let returnValue: string = '';
+    let returnValue: string = "";
     if (value) {
-      returnValue = '';
+      returnValue = "";
     } else {
       const previousList: string = this.properties.list;
       const previousSiteUrl: string = this.properties.siteUrl;
@@ -131,20 +198,28 @@ export default class CalenderWebPart extends BaseClientSideWebPart<ICalenderWebP
       this.properties.siteUrl = undefined;
       this.lists = [];
       this.listsDropdownDisabled = true;
-      this.onPropertyPaneFieldChanged('list', previousList, this.properties.list);
-      this.onPropertyPaneFieldChanged('siteUrl', previousSiteUrl, this.properties.siteUrl);
+      this.onPropertyPaneFieldChanged(
+        "list",
+        previousList,
+        this.properties.list
+      );
+      this.onPropertyPaneFieldChanged(
+        "siteUrl",
+        previousSiteUrl,
+        this.properties.siteUrl
+      );
       this.context.propertyPane.refresh();
     }
     return returnValue;
   }
 
-  private onEventEndDateValidation(date:string){
-    if (date && this.properties.eventEndDate.value){
-      if (moment(date).isBefore( moment(this.properties.eventStartDate.value))){
+  private onEventEndDateValidation(date: string) {
+    if (date && this.properties.eventEndDate.value) {
+      if (moment(date).isBefore(moment(this.properties.eventStartDate.value))) {
         return "start date is greater than end date";
       }
     }
-    return '';
+    return "";
   }
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
@@ -152,54 +227,54 @@ export default class CalenderWebPart extends BaseClientSideWebPart<ICalenderWebP
       pages: [
         {
           header: {
-            description: strings.PropertyPaneDescription
+            description: strings.PropertyPaneDescription,
           },
           groups: [
             {
               groupName: strings.BasicGroupName,
-              groupFields: [                
-                PropertyPaneTextField('siteUrl', {
+              groupFields: [
+                PropertyPaneTextField("siteUrl", {
                   label: "Site Url",
                   onGetErrorMessage: this.onSiteUrlGetErrorMessage.bind(this),
                   value: this.context.pageContext.site.absoluteUrl,
                   deferredValidationTime: 1200,
                 }),
-                PropertyPaneDropdown('list', {
+                PropertyPaneDropdown("list", {
                   label: "Calendar List name",
                   options: this.lists,
                   disabled: this.listsDropdownDisabled,
                 }),
-                PropertyPaneLabel('eventStartDate', {
-                  text: "Show only the events within the following dates"
+                PropertyPaneLabel("eventStartDate", {
+                  text: "Show only the events within the following dates",
                 }),
-                PropertyFieldDateTimePicker('eventStartDate', {
-                  label: 'From',
+                PropertyFieldDateTimePicker("eventStartDate", {
+                  label: "From",
                   initialDate: this.properties.eventStartDate,
                   dateConvention: DateConvention.Date,
                   onPropertyChange: this.onPropertyPaneFieldChanged,
                   properties: this.properties,
                   onGetErrorMessage: this.onEventStartDateValidation,
                   deferredValidationTime: 0,
-                  key: 'eventStartDateId'
+                  key: "eventStartDateId",
                 }),
-                PropertyFieldDateTimePicker('eventEndDate', {
-                  label: 'to',
-                  initialDate:  this.properties.eventEndDate,
+                PropertyFieldDateTimePicker("eventEndDate", {
+                  label: "to",
+                  initialDate: this.properties.eventEndDate,
                   dateConvention: DateConvention.Date,
                   onPropertyChange: this.onPropertyPaneFieldChanged,
                   properties: this.properties,
-                  onGetErrorMessage:  this.onEventEndDateValidation,
+                  onGetErrorMessage: this.onEventEndDateValidation,
                   deferredValidationTime: 0,
-                  key: 'eventEndDateId'
+                  key: "eventEndDateId",
                 }),
-                PropertyPaneLabel('errorMessage', {
-                  text:  this.errorMessage,
+                PropertyPaneLabel("errorMessage", {
+                  text: this.errorMessage,
                 }),
-              ]
-            }
-          ]
-        }
-      ]
+              ],
+            },
+          ],
+        },
+      ],
     };
   }
 }
