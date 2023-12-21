@@ -30,7 +30,7 @@ export default class parseRecurrentEvent {
   }
 
 
-  public RecurrenceExceptionExists(masterSeriesItemId: any, date: any) {
+  public RecurrenceExceptionExists(masterSeriesItemId, date) {
     const found = this.wEvents.filter((el,i) => {
 
       if (moment(el.RecurrenceID).isSame(moment(date)) && el.MasterSeriesItemID == masterSeriesItemId ) {

@@ -1,40 +1,14 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "calendar-events-client-side-solution",
-    "id": "299eeeb1-11a4-4923-be24-0ce6c939828c",
-    "version": "1.0.0.0",
+    "name": "react-calendar-client-side-solution",
+    "id": "3a13208b-3874-4036-9262-4edd22e88187",
+    "version": "1.0.12.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
-    "isDomainIsolated": false,
-    "developer": {
-      "name": "",
-      "websiteUrl": "",
-      "privacyUrl": "",
-      "termsOfUseUrl": "",
-      "mpnId": "Undefined-1.16.1"
-    },
-    "metadata": {
-      "shortDescription": {
-        "default": "calendar-events description"
-      },
-      "longDescription": {
-        "default": "calendar-events description"
-      },
-      "screenshotPaths": [],
-      "videoUrl": "",
-      "categories": []
-    },
-    "features": [
-      {
-        "title": "calendar-events Feature",
-        "description": "The feature that activates elements of the calendar-events solution.",
-        "id": "14b8fd0d-795c-44f6-938f-2da4a4c9791f",
-        "version": "1.0.0.0"
-      }
-    ]
+    "isDomainIsolated": false
   },
   "paths": {
-    "zippedPackage": "solution/calendar-events.sppkg"
+    "zippedPackage": "solution/react-calendar.sppkg"
   }
 }
