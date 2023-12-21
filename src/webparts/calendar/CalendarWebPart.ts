@@ -15,7 +15,7 @@ import { ICalendarProps } from './components/ICalendarProps';
 import { PropertyFieldDateTimePicker, DateConvention, TimeConvention, IDateTimeFieldValue } from '@pnp/spfx-property-controls/lib/PropertyFieldDateTimePicker';
 
 import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
-import { PropertyPaneHorizontalRule } from "@microsoft/sp-property-pane";
+// import { PropertyPaneHorizontalRule } from "@microsoft/sp-property-pane";
 
 export interface ICalendarWebPartProps {
   title: string;
@@ -29,7 +29,6 @@ export interface ICalendarWebPartProps {
 }
 import spservices from '../../services/spservices';
 import * as moment from 'moment';
-import { format } from '@uifabric/utilities';
 
 export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebPartProps> {
 

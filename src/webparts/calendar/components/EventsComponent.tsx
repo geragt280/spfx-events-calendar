@@ -84,5 +84,5 @@ export default function EventsComponent() {
     );
   };
 
-  return this._renderNarrowList();
+  return _renderNarrowList();
 }
