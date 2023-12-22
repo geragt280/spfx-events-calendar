@@ -24,6 +24,7 @@ export const EventCard = (props: IEventCardProps) => {
     location
   } = event;
 
+
   const eventDate: moment.Moment = moment(start);
   const dateString: string = allDay ? eventDate.format("dddd, MMMM Do YYYY") : eventDate.format("llll");
 
@@ -32,6 +33,7 @@ export const EventCard = (props: IEventCardProps) => {
    */
   const _onAddToMyCalendar = useCallback((): void => {
 
+    debugger;
     // create a calendar to hold the event
     const cal: ICS.VCALENDAR = new ICS.VCALENDAR();
     cal.addProp("VERSION", 2.0);
@@ -82,11 +84,9 @@ export const EventCard = (props: IEventCardProps) => {
 
   //Unfortunately, themes don't always populate all the palette/semantic colors.
   //Detect if background color is the same as the foreground and find default
-  const backgroundColor: string = themeVariant && (isNarrow ? themeVariant.semanticColors.bodyBackground : themeVariant.palette["primaryBackground"]);
-  const textColor: string = themeVariant && backgroundColor != themeVariant.semanticColors.bodyText ?
-    themeVariant.semanticColors.bodyText : themeVariant.palette["primaryText"];
-  const subTextColor: string = themeVariant && themeVariant.semanticColors.bodySubtext && backgroundColor != themeVariant.semanticColors.bodySubtext ? themeVariant.semanticColors.bodySubtext : textColor;
-
+  const backgroundColor: string = "white";
+  const textColor: string = "black";
+  const subTextColor: string = "gray";
   if (isNarrow) {
     // Calculate the date and string format
 

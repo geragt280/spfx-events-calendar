@@ -11,6 +11,7 @@
   -ms-flex-align: center;
   align-items: center;
   text-align: center;
+  height: fit-content;
 }
 
 .box.boxIsSingleDay {
@@ -56,6 +57,7 @@
 .boxIsSmall .month {
   font-size: 12px;
   font-weight: 400;
+
 }
 
 .boxIsMedium .month {
@@ -82,7 +84,7 @@
 }
 
 .box.boxIsSmall {
-  height: 62px;
+  height: 58px;
   width: 62px;
 
   .month {

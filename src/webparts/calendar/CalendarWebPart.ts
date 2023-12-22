@@ -13,7 +13,7 @@ import * as strings from 'CalendarWebPartStrings';
 import Calendar from './components/Calendar';
 import { ICalendarProps } from './components/ICalendarProps';
 import { PropertyFieldDateTimePicker, DateConvention, TimeConvention, IDateTimeFieldValue } from '@pnp/spfx-property-controls/lib/PropertyFieldDateTimePicker';
-
+import { ThemeProvider, ThemeChangedEventArgs, IReadonlyTheme, ISemanticColors } from '@microsoft/sp-component-base';
 import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
 // import { PropertyPaneHorizontalRule } from "@microsoft/sp-property-pane";
 
@@ -23,6 +23,10 @@ export interface ICalendarWebPartProps {
   list: string;
   eventStartDate: IDateTimeFieldValue ;
   eventEndDate: IDateTimeFieldValue;
+  siteUrl2: string;
+  list2: string;
+  eventStartDate2: IDateTimeFieldValue ;
+  eventEndDate2: IDateTimeFieldValue;
   errorMessage: string;
   headerColor:string;
   calendarCellColor: string;
@@ -36,6 +40,8 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
   private listsDropdownDisabled: boolean = true;
   private spService: spservices = null;
   private errorMessage: string;
+  private _themeProvider: ThemeProvider;
+  private _themeVariant: IReadonlyTheme | undefined;
 
   public constructor() {
     super();
@@ -50,15 +56,15 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
         title: this.properties.title,
         siteUrl: this.properties.siteUrl,
         list: this.properties.list,
-        displayMode: this.displayMode,
-        updateProperty: (value: string) => {
-          this.properties.title = value;
-        },
-        context: this.context,
         eventStartDate: this.properties.eventStartDate,
         eventEndDate: this.properties.eventEndDate,
+        displayMode: this.displayMode,
         headerColor:this.properties.headerColor,
-        calendarCellColor: this.properties.calendarCellColor
+        calendarCellColor: this.properties.calendarCellColor,
+        context: this.context,
+        updateProperty: (value: string) => {
+          this.properties.title = value;
+        }
       }
     );
 
@@ -69,6 +75,12 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
   public  async onInit(): Promise<void> {
 
     this.spService = new spservices(this.context);
+    this._themeProvider = this.context.serviceScope.consume(ThemeProvider.serviceKey);
+    
+    this._themeVariant = this._themeProvider.tryGetTheme();
+    
+    this._themeProvider.themeChangedEvent.add(this, this._handleThemeChangedEvent);
+
     this.properties.siteUrl = this.properties.siteUrl ? this.properties.siteUrl : this.context.pageContext.site.absoluteUrl;
     if (!this.properties.eventStartDate){
       this.properties.eventStartDate = { value: moment().subtract(2,'years').startOf('month').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
@@ -323,8 +335,93 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
               ]
             }
           ]
+        },
+        {
+          header: {
+            description: "Event Feeds Configuration"
+          },
+          groups: [
+            {
+              groupName: "Webpart Settings",
+              groupFields: [
+                PropertyPaneTextField('siteUrl2', {
+                  label: strings.SiteUrlFieldLabel,
+                  onGetErrorMessage: this.onSiteUrlGetErrorMessage.bind(this),
+                  value: this.context.pageContext.site.absoluteUrl,
+                  deferredValidationTime: 1200,
+                }),
+                PropertyPaneDropdown('list2', {
+                  label: strings.ListFieldLabel,
+                  options: this.lists,
+                  disabled: this.listsDropdownDisabled,
+                }),
+                PropertyPaneLabel('eventStartDate2', {
+                  text: strings.eventSelectDatesLabel
+                }),
+                PropertyFieldDateTimePicker('eventStartDate2', {
+                  label: 'From',
+                  initialDate: this.properties.eventStartDate,
+                  dateConvention: DateConvention.Date,
+                  onPropertyChange: this.onPropertyPaneFieldChanged,
+                  properties: this.properties,
+                  onGetErrorMessage: this.onEventStartDateValidation,
+                  deferredValidationTime: 0,
+                  key: 'eventStartDateId'
+                }),
+                PropertyFieldDateTimePicker('eventEndDate2', {
+                  label: 'to',
+                  initialDate:  this.properties.eventEndDate,
+                  dateConvention: DateConvention.Date,
+                  onPropertyChange: this.onPropertyPaneFieldChanged,
+                  properties: this.properties,
+                  onGetErrorMessage:  this.onEventEndDateValidation,
+                  deferredValidationTime: 0,
+                  key: 'eventEndDateId'
+                }),
+                // PropertyPaneLabel('errorMessage2', {
+                //   text:  this.errorMessage,
+                // }),
+                // PropertyFieldColorPicker('headerColor', {
+                //   label: 'Header background color',
+                //   selectedColor: this.properties.headerColor,
+                //   onPropertyChange: this.onPropertyPaneFieldChanged,
+                //   properties: this.properties,
+                //   disabled: false,
+                //   // debounce: 100,
+                //   isHidden: false,
+                //   alphaSliderHidden: true,
+                //   style: PropertyFieldColorPickerStyle.Inline,
+                //   iconName: 'Precipitation',
+                //   key: 'headerColorFieldId'
+                // }),
+                // PropertyFieldColorPicker('calendarCellColor', {
+                //   label: 'Calender cell color',
+                //   selectedColor: this.properties.calendarCellColor,
+                //   onPropertyChange: this.onPropertyPaneFieldChanged,
+                //   properties: this.properties,
+                //   disabled: false,
+                //   // debounce: 100,
+                //   isHidden: false,
+                //   alphaSliderHidden: true,
+                //   style: PropertyFieldColorPickerStyle.Inline,
+                //   iconName: 'Precipitation',
+                //   key: 'calendarCellColorFieldId'
+                // })
+              ]
+            }
+          ]
         }
       ]
     };
   }
+
+   /**
+ * Update the current theme variant reference and re-render.
+ *
+ * @param args The new theme
+ */
+    private _handleThemeChangedEvent(args: ThemeChangedEventArgs): void {
+      this._themeVariant = args.theme;
+      this.render();
+    }
 }

@@ -13,15 +13,13 @@ export const Pagination = (props: IPaginationProps) => {
   const { currentPage, totalItems, itemsCountPerPage } = props;
 
   // calculate the page situation
-  const numberOfPages: number = Math.round(totalItems / itemsCountPerPage);
+  const numberOfPages: number = Math.ceil(totalItems / itemsCountPerPage);
 
   // we disable the previous button if we're on page 1
   const prevDisabled: boolean = currentPage <= 1;
 
   // we disable the next button if we're on the last page
   const nextDisabled: boolean = currentPage >= numberOfPages;
-
-
   /**
        * Increments the page number unless we're on the last page
        */

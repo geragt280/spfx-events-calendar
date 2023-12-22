@@ -14,7 +14,7 @@
   align-items: center;
   padding: 2px !important;
   border: none;
-  height: 68px;
+  height: 62px;
   margin-bottom: 12px;
 }
 
@@ -130,7 +130,7 @@
   display: -ms-flexbox;
   display: flex;
   max-width: 480px;
-  height: 68px;
+  height: 60px;
   border: 1px solid transparent;
 }
 
@@ -144,6 +144,7 @@
 
 .dateBox {
   border-color: $ms-color-neutralTertiaryAlt;
+  height: 60px;
 }
 
 .normalCard .title {

@@ -18,11 +18,10 @@ export const DateBox = (props: IDateBoxProps) => {
   const isSameDay: boolean = startMoment.isSame(endMoment, "day");
 
   const { themeVariant } = props;
-  const backgroundColor: string = themeVariant && themeVariant.palette["primaryBackground"];
-  const textColor: string = themeVariant && backgroundColor != themeVariant.semanticColors.bodyText ?
-    themeVariant.semanticColors.bodyText : themeVariant.palette["primaryText"];
+  const backgroundColor: string = "white";
+  const textColor: string = "black";
   // If the background color matches the text color, it is probably a reversed section, use a different border color
-  const borderColor: string = themeVariant && backgroundColor != themeVariant.semanticColors.bodyText ? themeVariant.semanticColors.bodyDivider : "[theme:neutralLight, default: #eaeaea]";
+  const borderColor: string = "[theme:neutralLight, default: #eaeaea]";
 
   if (isSameDay) {
     return (

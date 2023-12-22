@@ -1,5 +1,7 @@
 import { IPanelModelEnum} from '../../../controls/Event/IPanelModeEnum';
 import { IEventData } from './../../../services/IEventData';
+import { ICalendarEvent } from "../../../shared/CalendarService";
+
 export interface ICalendarState {
   showDialog: boolean;
   eventData:  IEventData[];
@@ -10,4 +12,5 @@ export interface ICalendarState {
   isloading: boolean;
   hasError: boolean;
   errorMessage: string;
+  feedsEvents: ICalendarEvent[];
 }

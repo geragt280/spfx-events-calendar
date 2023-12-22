@@ -45,11 +45,7 @@ import {
   MessageBarType,
   Stack,
 } from "office-ui-fabric-react";
-import { EnvironmentType } from "@microsoft/sp-core-library";
-import { mergeStyleSets } from "office-ui-fabric-react/lib/Styling";
-import { WebPartTitle } from "@pnp/spfx-controls-react/lib/WebPartTitle";
 import { Placeholder } from "@pnp/spfx-controls-react/lib/Placeholder";
-import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { DisplayMode } from "@microsoft/sp-core-library";
 import spservices from "../../../services/spservices";
 import { stringIsNullOrEmpty } from "@pnp/common";
@@ -57,6 +53,9 @@ import { Event } from "../../../controls/Event/event";
 import { IPanelModelEnum } from "../../../controls/Event/IPanelModeEnum";
 import { IEventData } from "./../../../services/IEventData";
 import { IUserPermissions } from "./../../../services/IUserPermissions";
+import EventsComponent from "./EventsComponent";
+import { ICalendarEvent } from "../../../shared/CalendarService";
+import { combine } from "@pnp/common";
 
 //const localizer = BigCalendar.momentLocalizer(moment);
 const localizer = momentLocalizer(moment);
@@ -81,6 +80,7 @@ export default class Calendar extends React.Component<
       isloading: true,
       hasError: false,
       errorMessage: "",
+      feedsEvents: []
     };
 
     this.onDismissPanel = this.onDismissPanel.bind(this);
@@ -150,10 +150,16 @@ export default class Calendar extends React.Component<
         this.props.eventEndDate.value
       );
 
+      console.log("Events data", eventsData);
+      const calendarFeedsEvents: ICalendarEvent[] = this.getFeedsEvents({ calEvents: eventsData });
+      
+      console.log("Feeds Events", calendarFeedsEvents);
+
       this.setState({
         eventData: eventsData,
         hasError: false,
         errorMessage: "",
+        feedsEvents: calendarFeedsEvents
       });
     } catch (error) {
       this.setState({
@@ -163,6 +169,34 @@ export default class Calendar extends React.Component<
       });
     }
   }
+
+
+  public getFeedsEvents = ({calEvents} :{ calEvents: IEventData[] }): ICalendarEvent[] => {
+    try {
+      // Once we get the list, convert to calendar events
+      let events: ICalendarEvent[] = calEvents.map((item: any) => {
+        let eventUrl: string = undefined; //combine(webUrl, "DispForm.aspx?ID=" + item.Id);
+        const eventItem: ICalendarEvent = {
+          title: item.title,
+          start: item.EventDate,
+          end: item.EndDate,
+          url: eventUrl,
+          allDay: item.fAllDayEvent,
+          category: item.Category,
+          description: item.Description,
+          location: item.location
+        };
+        return eventItem;
+      });
+      // Return the calendar items
+      return events;
+    }
+    catch (error) {
+      console.log("Exception caught by catch in SharePoint provider", error);
+      throw error;
+    }
+  }
+
   /**
    * @memberof Calendar
    */
@@ -373,7 +407,7 @@ export default class Calendar extends React.Component<
         <h2>{label}</h2>
       </div>
     );
-  };
+  }
 
   private MyEventWrapper: React.FC<EventWrapperProps> = ({
     children,
@@ -399,7 +433,7 @@ export default class Calendar extends React.Component<
         )}
       </div>
     );
-  };
+  }
 
   /**
    *
@@ -469,12 +503,12 @@ export default class Calendar extends React.Component<
                 />
               ) : (
                 <div className={styles.container}>
-                  <Stack 
+                  <Stack
                     horizontal
-                    style={{ 
+                    style={{
                       height: "inherit",
-                      display:'flex',
-                      flexDirection:'row',
+                      display: "flex",
+                      flexDirection: "row",
                     }}
                   >
                     <MyCalendar
@@ -490,14 +524,24 @@ export default class Calendar extends React.Component<
                       view="month"
                       views={["month"]}
                       popup={false}
-                      style={{minWidth:350}}
+                      style={{ minWidth: 350 }}
                       components={{
                         toolbar: this.MyCustomHeader,
                         eventWrapper: this.MyEventWrapper.bind(this),
                       }}
                       defaultDate={moment().startOf("day").toDate()}
                     />
-                    <div>ABC</div>
+                    <EventsComponent
+                      context={this.props.context}
+                      displayMode={this.props.displayMode}
+                      clientWidth={400}
+                      isConfigured={true}
+                      maxEvents={4}
+                      isLoading={this.state.isloading}
+                      title={this.props.title}
+                      feedEvents={this.state.feedsEvents}
+                      updateProperty={this.props.updateProperty}
+                    />
                   </Stack>
                 </div>
               )}
