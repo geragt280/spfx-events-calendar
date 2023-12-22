@@ -29,11 +29,17 @@
       },
       "officeFabricIconFontName": "Calendar",
       "properties": {
-        "title": "Calendar",
+        "title": "Evnet Calendar",
+        "feedsTitle": "Upcoming Events",
+        "headingTitleColor": "#383A37",
         "siteUrl": "",
         "list": "",
         "eventStartDate": "",
         "eventEndDate": "",
+        "siteUrl2": "",
+        "list2": "",
+        "eventStartDate2": "",
+        "eventEndDate2": "",
         "headerColor": "#BE9B61",
         "calendarCellColor": "#909090"
       }

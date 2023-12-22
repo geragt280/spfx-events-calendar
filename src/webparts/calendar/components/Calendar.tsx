@@ -3,6 +3,7 @@ import styles from "./Calendar.module.scss";
 import { ICalendarProps } from "./ICalendarProps";
 import { ICalendarState } from "./ICalendarState";
 import { escape } from "@microsoft/sp-lodash-subset";
+import { WebPartTitle } from "@pnp/spfx-controls-react/lib/WebPartTitle";
 import * as moment from "moment";
 import * as strings from "CalendarWebPartStrings";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -128,32 +129,49 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   private async loadEvents() {
+    const {list, list2, siteUrl, siteUrl2, eventEndDate, eventEndDate2, eventStartDate, eventStartDate2, displayMode} = this.props;
     try {
       // Teste Properties
       if (
-        !this.props.list ||
-        !this.props.siteUrl ||
-        !this.props.eventStartDate.value ||
-        !this.props.eventEndDate.value
+        !list ||
+        !siteUrl ||
+        !eventStartDate.value ||
+        !eventEndDate.value ||
+        !list2 ||
+        !siteUrl2 ||
+        !eventStartDate2.value ||
+        !eventEndDate2.value
       )
         return;
 
       this.userListPermissions = await this.spService.getUserPermissions(
-        this.props.siteUrl,
-        this.props.list
+        siteUrl,
+        list
       );
 
       const eventsData: IEventData[] = await this.spService.getEvents(
-        escape(this.props.siteUrl),
-        escape(this.props.list),
-        this.props.eventStartDate.value,
-        this.props.eventEndDate.value
+        escape(siteUrl),
+        escape(list),
+        eventStartDate.value,
+        eventEndDate.value
       );
 
-      console.log("Events data", eventsData);
-      const calendarFeedsEvents: ICalendarEvent[] = this.getFeedsEvents({ calEvents: eventsData });
-      
-      console.log("Feeds Events", calendarFeedsEvents);
+      if (DisplayMode.Edit === displayMode) {
+        console.log("Events data", eventsData);        
+      }
+
+      const feedEventsData: IEventData[] = await this.spService.getEvents(
+        escape(siteUrl2),
+        escape(list2),
+        eventStartDate2.value,
+        eventEndDate2.value
+      );
+
+      if (DisplayMode.Edit === displayMode) {
+        console.log("Feed Events data", feedEventsData);        
+      }
+
+      const calendarFeedsEvents: ICalendarEvent[] = this.getFeedsEvents({ calEvents: feedEventsData });
 
       this.setState({
         eventData: eventsData,
@@ -161,7 +179,9 @@ export default class Calendar extends React.Component<
         errorMessage: "",
         feedsEvents: calendarFeedsEvents
       });
+
     } catch (error) {
+      console.error("Error in getItems", error);
       this.setState({
         hasError: true,
         errorMessage: error.message,
@@ -201,6 +221,9 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   public async componentDidMount() {
+    if(DisplayMode.Edit === this.props.displayMode){
+      console.log("context urls", this.props.context.pageContext.web);
+    }
     this.setState({ isloading: true });
     await this.loadEvents();
     this.setState({ isloading: false });
@@ -230,14 +253,21 @@ export default class Calendar extends React.Component<
       !this.props.list ||
       !this.props.siteUrl ||
       !this.props.eventStartDate.value ||
-      !this.props.eventEndDate.value
+      !this.props.eventEndDate.value ||
+      !this.props.list2 ||
+      !this.props.siteUrl2 ||
+      !this.props.eventStartDate2.value ||
+      !this.props.eventEndDate2.value
     )
       return;
     // Get  Properties change
     if (
       prevProps.list !== this.props.list ||
       this.props.eventStartDate.value !== prevProps.eventStartDate.value ||
-      this.props.eventEndDate.value !== prevProps.eventEndDate.value
+      this.props.eventEndDate.value !== prevProps.eventEndDate.value ||
+      prevProps.list2 !== this.props.list2 ||
+      this.props.eventStartDate2.value !== prevProps.eventStartDate2.value ||
+      this.props.eventEndDate2.value !== prevProps.eventEndDate2.value
     ) {
       this.setState({ isloading: true });
       await this.loadEvents();
@@ -469,15 +499,19 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   public render(): React.ReactElement<ICalendarProps> {
+    
     return (
       <Customizer {...FluentCustomizations}>
         <div
           className={styles.calendar}
           style={{ backgroundColor: "white", padding: "20px" }}
         >
-          {/* <WebPartTitle displayMode={this.props.displayMode}
-            title={this.props.title}
-            updateProperty={this.props.updateProperty} /> */}
+          <div style={{backgroundColor: this.props.headingTitleColor}}>
+            <WebPartTitle displayMode={this.props.displayMode}
+              title={this.props.title}
+              className={styles.webPartTitle}
+              updateProperty={this.props.updateTitleProperty} />
+          </div>
           {!this.props.list ||
           !this.props.eventStartDate.value ||
           !this.props.eventEndDate.value ? (
@@ -511,6 +545,7 @@ export default class Calendar extends React.Component<
                       height: "inherit",
                       display: "flex",
                       flexDirection: "row",
+                      justifyContent: 'space-between'
                     }}
                   >
                     <MyCalendar
@@ -540,9 +575,9 @@ export default class Calendar extends React.Component<
                       isConfigured={true}
                       maxEvents={4}
                       isLoading={this.state.isloading}
-                      title={this.props.title}
+                      title={this.props.feedsTitle}
                       feedEvents={this.state.feedsEvents}
-                      updateProperty={this.props.updateProperty}
+                      updateProperty={this.props.updateFeedsTitleProperty}
                     />
                   </Stack>
                 </div>

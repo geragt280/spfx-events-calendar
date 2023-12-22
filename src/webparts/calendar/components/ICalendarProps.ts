@@ -5,6 +5,7 @@ import { IReadonlyTheme } from '@microsoft/sp-component-base';
 
 export interface ICalendarProps {
   title: string;
+  feedsTitle: string;
   siteUrl: string;
   list: string;
   eventStartDate:  IDateTimeFieldValue;
@@ -14,9 +15,11 @@ export interface ICalendarProps {
   eventStartDate2:  IDateTimeFieldValue;
   eventEndDate2: IDateTimeFieldValue;
   displayMode: DisplayMode;
-  updateProperty: (value: string) => void;
+  updateTitleProperty: (value: string) => void;
+  updateFeedsTitleProperty: (value: string) => void;
   context: WebPartContext;
   headerColor:string;
   calendarCellColor: string;
   themeVariant: IReadonlyTheme;
+  headingTitleColor: string;
 }
