@@ -392,10 +392,12 @@ export default class Calendar extends React.Component<
       style: {
         backgroundColor: "transparent",
         borderColor: "transparent",
+        color: "transparent",
         borderRadius: "0",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        height: 10
       },
     };
   }

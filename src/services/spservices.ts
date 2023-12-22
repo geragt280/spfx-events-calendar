@@ -482,6 +482,9 @@ export default class spservices {
               </Leq>
               </And>
           </Where>
+          <OrderBy>
+            <FieldRef Name='EventDate' Ascending='True' />
+          </OrderBy>
           </Query>
           <RowLimit Paged=\"FALSE\">2000</RowLimit>
           </View>`

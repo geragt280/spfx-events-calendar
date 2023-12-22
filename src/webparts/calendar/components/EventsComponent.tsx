@@ -197,7 +197,7 @@ export default class EventsComponent extends React.Component<ICalendarFeedSummar
 
     // put everything together in a nice little calendar view
     return (
-      <div className={css(styles.calendarFeedSummary, styles.webPartChrome)} style={{ backgroundColor: 'wheat' }}>
+      <div className={css(styles.calendarFeedSummary, styles.webPartChrome)} >
         <div className={css(styles.webPartHeader, styles.headerSmMargin)}>
           <WebPartTitle displayMode={this.props.displayMode}
             title={this.props.title}

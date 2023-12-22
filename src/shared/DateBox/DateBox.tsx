@@ -39,11 +39,18 @@ export const DateBox = (props: IDateBoxProps) => {
         <div className={styles.month}
           style={
             props.themeVariant &&
-            { color: textColor }}>{startMoment.format("MMM").toUpperCase()}</div>
+            { color: textColor }
+          }>
+            {/* {startMoment.format("MMM").toUpperCase()} */}
+            Month
+        </div>
         <div className={styles.day}
           style={
             props.themeVariant &&
-            { color: textColor }}>{startMoment.format("D")}</div>
+            { color: textColor }}>
+            {/* {startMoment.format("D")} */}
+            {startMoment.format("DD")}
+        </div>
       </div>);
 
   } else {
