@@ -23,12 +23,8 @@ export interface ICalendarWebPartProps {
   feedsTitle: string;
   siteUrl: string;
   list: string;
-  eventStartDate: IDateTimeFieldValue ;
-  eventEndDate: IDateTimeFieldValue;
   siteUrl2: string;
   list2: string;
-  eventStartDate2: IDateTimeFieldValue ;
-  eventEndDate2: IDateTimeFieldValue;
   errorMessage: string;
   headerColor:string;
   calendarCellColor: string;
@@ -60,12 +56,8 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
         feedsTitle: this.properties.feedsTitle,
         siteUrl: this.properties.siteUrl,
         list: this.properties.list,
-        eventStartDate: this.properties.eventStartDate,
-        eventEndDate: this.properties.eventEndDate,
         siteUrl2: this.properties.siteUrl2,
         list2: this.properties.list2,
-        eventStartDate2: this.properties.eventStartDate2,
-        eventEndDate2: this.properties.eventEndDate2,
         displayMode: this.displayMode,
         headerColor:this.properties.headerColor,
         calendarCellColor: this.properties.calendarCellColor,
@@ -95,18 +87,6 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
 
     this.properties.siteUrl = this.properties.siteUrl ? this.properties.siteUrl : this.context.pageContext.web.absoluteUrl;
     this.properties.siteUrl2 = this.properties.siteUrl2 ? this.properties.siteUrl2 : this.context.pageContext.web.absoluteUrl;
-    if (!this.properties.eventStartDate){
-      this.properties.eventStartDate = { value: moment().subtract(2,'years').startOf('month').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-    }
-    if (!this.properties.eventEndDate){
-      this.properties.eventEndDate = { value: moment().add(20,'years').endOf('month').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-    }
-    if (!this.properties.eventStartDate2){
-      this.properties.eventStartDate2 = { value: moment().subtract(2,'years').startOf('month').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-    }
-    if (!this.properties.eventEndDate2){
-      this.properties.eventEndDate2 = { value: moment().add(20,'years').endOf('month').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-    }
     if (this.properties.siteUrl && !this.properties.list) {
      const _lists = await this.loadLists();
      if ( _lists.length > 0 ){
@@ -210,38 +190,6 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
     return _lists;
   }
 
-  /**
-   *
-   *
-   * @private
-   * @param {string} date
-   * @returns
-   * @memberof CalendarWebPart
-   */
-  private onEventStartDateValidation(date:string){
-    if (date && this.properties.eventEndDate.value){
-      if (moment(date).isAfter(moment(this.properties.eventEndDate.value))){
-        return strings.SartDateValidationMessage;
-      }
-    }
-    return '';
-  }
-
-  /**
-   *
-   * @private
-   * @param {string} date
-   * @returns
-   * @memberof CalendarWebPart
-   */
-  private onEventEndDateValidation(date:string){
-    if (date && this.properties.eventEndDate.value){
-      if (moment(date).isBefore( moment(this.properties.eventStartDate.value))){
-        return strings.EnDateValidationMessage;
-      }
-    }
-    return '';
-  }
   /**
    *
    * @private

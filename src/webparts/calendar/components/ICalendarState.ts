@@ -13,4 +13,6 @@ export interface ICalendarState {
   hasError: boolean;
   errorMessage: string;
   feedsEvents: ICalendarEvent[];
+  monthAddCount: number;
+  calenderIsLoading: boolean;
 }
