@@ -31,7 +31,6 @@ export interface ICalendarFeedSummaryProps {
 }
 
 export default class EventsComponent extends React.Component<ICalendarFeedSummaryProps, ICalendarFeedSummaryState> {
-  private MaxMobileWidth: number = 480;
   // Your component logic goes here
   constructor(props: ICalendarFeedSummaryProps) {
     super(props);
@@ -94,12 +93,6 @@ export default class EventsComponent extends React.Component<ICalendarFeedSummar
     }
   }
 
-  private _onPageUpdate = (pageNumber: number): void => {
-    this.setState({
-      currentPage: pageNumber
-    });
-  }
-
   private _renderNarrowList = (): JSX.Element => {
     const { events, currentPage } = this.state;
     const { maxEvents } = this.props;
@@ -109,7 +102,7 @@ export default class EventsComponent extends React.Component<ICalendarFeedSummar
     const isEditMode: boolean = this.props.displayMode === DisplayMode.Edit;
 
     let pagedEvents: ICalendarEvent[] = events;
-    let usePaging: boolean = false;
+    // let usePaging: boolean = false;
 
     if (maxEvents > 0 && events.length > maxEvents) {
       // calculate the page size
@@ -117,7 +110,6 @@ export default class EventsComponent extends React.Component<ICalendarFeedSummar
       const pageEndAt: number = maxEvents * currentPage;
 
       pagedEvents = events.slice(pageStartAt, pageEndAt);
-      usePaging = true;
     }
 
     return (
@@ -142,22 +134,17 @@ export default class EventsComponent extends React.Component<ICalendarFeedSummar
     );
   }
 
-  private _onConfigure = () => {
+  private _onConfigure = () : void => {
     this.props.context.propertyPane.open();
   }
 
   private _renderContent(): JSX.Element {
-    const {
-      displayMode,
-    } = this.props;
+
     const {
       events,
-      isLoading,
-      error
+      isLoading
     } = this.state;
 
-    const isEditMode: boolean = displayMode === DisplayMode.Edit;
-    const hasErrors: boolean = error !== undefined;
     const hasEvents: boolean = events.length > 0;
 
     if (isLoading) {

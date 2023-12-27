@@ -1,5 +1,5 @@
 import { Guid } from "@microsoft/sp-core-library";
-import * as ICS from "ics-js";
+//import * as ICS from "ics-js";
 import * as moment from "moment";
 import { ActionButton, DocumentCard, DocumentCardType, FocusZone, css } from "office-ui-fabric-react";
 import * as React from "react";
@@ -8,6 +8,8 @@ import { DateBox, DateBoxSize } from "../DateBox";
 import styles from "./EventCard.module.scss";
 import { Text } from "@microsoft/sp-core-library";
 import { useCallback } from 'react';
+
+const ICS:any = {};
 /**
  * Shows an event in a document card
  */
@@ -35,12 +37,12 @@ export const EventCard = (props: IEventCardProps) => {
 
     debugger;
     // create a calendar to hold the event
-    const cal: ICS.VCALENDAR = new ICS.VCALENDAR();
+    const cal = new ICS.VCALENDAR();
     cal.addProp("VERSION", 2.0);
     cal.addProp("PRODID", "//SPFX//NONSGML v1.0//EN");
 
     // create an event
-    const icsEvent: ICS.VEVENT = new ICS.VEVENT();
+    const icsEvent = new ICS.VEVENT();
 
     // generate a unique id
     icsEvent.addProp("UID", Guid.newGuid().toString());
@@ -84,7 +86,7 @@ export const EventCard = (props: IEventCardProps) => {
 
   //Unfortunately, themes don't always populate all the palette/semantic colors.
   //Detect if background color is the same as the foreground and find default
-  const backgroundColor: string = "white";
+  // const backgroundColor: string = "white";
   const textColor: string = "black";
   const subTextColor: string = "gray";
   if (isNarrow) {
@@ -95,7 +97,7 @@ export const EventCard = (props: IEventCardProps) => {
       <div>
         <div
           className={css(styles.cardWrapper, styles.compactCard, styles.root, styles.rootIsCompact)}
-          style={themeVariant && { backgroundColor: themeVariant.semanticColors.bodyBackground }}
+          style={themeVariant && { backgroundColor: themeVariant.semanticColors.bodyBackground, minWidth:200 }}
           data-is-focusable={true}
           data-is-focus-item={true}
           role="listitem"
@@ -116,7 +118,7 @@ export const EventCard = (props: IEventCardProps) => {
                 themeVariant={themeVariant}
               />
             </div>
-            <div>
+            <div style={{minWidth:115}}>
               <div className={styles.title} style={themeVariant && { color: textColor }}>{title}</div>
               <div className={styles.datetime} style={themeVariant && { color: subTextColor }}>{dateString}</div>
             </div>

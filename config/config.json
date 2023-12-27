@@ -8,14 +8,13 @@
           "entrypoint": "./lib/webparts/calendar/CalendarWebPart.js",
           "manifest": "./src/webparts/calendar/CalendarWebPart.manifest.json"
         }
-
       ]
     }
   },
   "externals": {},
   "localizedResources": {
     "CalendarWebPartStrings": "lib/webparts/calendar/loc/{locale}.js",
-    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
-    "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
+    "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
   }
 }

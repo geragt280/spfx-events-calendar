@@ -17,7 +17,7 @@ export const DateBox = (props: IDateBoxProps) => {
   // check if both dates are on the same day
   const isSameDay: boolean = startMoment.isSame(endMoment, "day");
 
-  const { themeVariant } = props;
+  // const { themeVariant } = props;
   const backgroundColor: string = "white";
   const textColor: string = "black";
   // If the background color matches the text color, it is probably a reversed section, use a different border color
@@ -49,7 +49,7 @@ export const DateBox = (props: IDateBoxProps) => {
             props.themeVariant &&
             { color: textColor }}>
             {/* {startMoment.format("D")} */}
-            {startMoment.format("DD")}
+            {startMoment.format("MM")}
         </div>
       </div>);
 

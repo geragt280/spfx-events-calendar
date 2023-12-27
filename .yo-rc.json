@@ -1,31 +1,20 @@
 {
-  "@pnp/generator-spfx": {
-    "framework": "react",
-    "pnpFramework": "reactjs.plus",
-    "pnp-libraries": [
-      "jquery@3",
-      "@pnp/pnpjs",
-      "@pnp/spfx-property-controls",
-      "@pnp/spfx-controls-react"
-    ],
-    "pnp-ci": [
-      "azure"
-    ],
-    "pnp-vetting": [
-      "webpack-analyzer",
-      "stylelint"
-    ],
-    "spfxenv": "spo"
-  },
   "@microsoft/generator-sharepoint": {
-    "environment": "spo",
-    "framework": "react",
-    "plusBeta": true,
+    "plusBeta": false,
     "isCreatingSolution": true,
-    "version": "1.12.1",
-    "libraryName": "react-calendar",
-    "libraryId": "3a13208b-3874-4036-9262-4edd22e88187",
+    "nodeVersion": "14.17.1",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.4.1"
+    },
+    "version": "1.16.1",
+    "libraryName": "calendar-events-v2",
+    "libraryId": "b23f58bd-7d1d-4976-a12e-f5680f9be2ea",
+    "environment": "spo",
     "packageManager": "npm",
+    "solutionName": "calendar-events-v2",
+    "solutionShortDescription": "calendar-events-v2 description",
+    "skipFeatureDeployment": true,
     "isDomainIsolated": false,
     "componentType": "webpart"
   }

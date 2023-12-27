@@ -1,11 +1,10 @@
 /**
  * ExtensionService
  */
-import { HttpClientResponse } from "@microsoft/sp-http";
 import { ICalendarService } from "..";
 import { BaseCalendarService } from "../BaseCalendarService";
 import { ICalendarEvent } from "../ICalendarEvent";
-import { Web } from "@pnp/sp";
+// import * as Web from "@pnp/sp";
 import { combine } from "@pnp/common";
 
 export class SharePointCalendarService extends BaseCalendarService
@@ -34,11 +33,11 @@ export class SharePointCalendarService extends BaseCalendarService
     let listUrl = webUrl.substring(webRoot.length);
 
     // Find the "lists" portion of the URL to get the site URL
-    let webLocation = listUrl.substr(0, listUrl.indexOf("lists/"));
-    let siteUrl = webRoot + webLocation;
+    // let webLocation = listUrl.substr(0, listUrl.indexOf("lists/"));
+    // let siteUrl = webRoot + webLocation;
 
     // Open the web associated to the site
-    let web = new Web(siteUrl);
+    let web:any = {} ;//;new Web(siteUrl);
 
     // Get the web
     await web.get();

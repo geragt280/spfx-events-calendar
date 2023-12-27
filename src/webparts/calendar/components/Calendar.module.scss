@@ -1,6 +1,5 @@
 @import "~@microsoft/sp-office-ui-fabric-core/dist/sass/SPFabricCore.scss";
 @import "~office-ui-fabric-react/dist/sass/References.scss";
-@import "./node_modules/spfx-uifabric-themes/office.theme.vars";
 @import "../../themes";
 
 :export {
@@ -20,16 +19,38 @@
   display: "block";
 }
 
+.msGrid{
+  @include ms-Grid;
+}
+
+.msGridRow{
+  @include ms-Grid-row;
+}
+
+.msGridCol{
+  @include ms-Grid-col;
+  @include ms-sm12;
+  @include ms-md12;
+  @include ms-xl12;
+  @include ms-xxl6;
+  
+  @media (max-width: 1200px)
+  {
+    margin-top: 20px;
+  }
+}
+
 .iconStyle{
-  font-size: 30px !important;
-  height: 30px !important;
-  width: 30px !important;
+  font-size: 20px !important;
+  height: 20px !important;
+  width: 20px !important;
   margin: '0 25px' !important;
   cursor: pointer;
 }
 
 .webPartTitle {
   color: #fff !important;
+  height: 32px;
   padding: 5px;
 }
 
@@ -121,7 +142,7 @@
     max-width: 100%;
     min-height: 350px;
     height: 350px;
-    margin: 0 auto;
+    margin: 10px auto;
   }
 
   .plainCard {

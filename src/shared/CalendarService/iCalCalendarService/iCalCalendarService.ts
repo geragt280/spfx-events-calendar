@@ -1,11 +1,11 @@
 /**
  * ExtensionService
  */
-import * as ICAL from "ical.js";
+//import * as ICAL from "ical.js";
 import { ICalendarService } from "..";
 import { BaseCalendarService } from "../BaseCalendarService";
 import { ICalendarEvent } from "../ICalendarEvent";
-
+const ICAL:any = {};
 // tslint:disable-next-line:class-name
 export class iCalCalendarService extends BaseCalendarService implements ICalendarService {
   constructor() {
@@ -23,7 +23,7 @@ export class iCalCalendarService extends BaseCalendarService implements ICalenda
       const comp: any = new ICAL.Component(jsonified);
       const veventList: any[] = comp.getAllSubcomponents("vevent");
       let events: ICalendarEvent[] = veventList.map((vevent: any) => {
-        const event: ICAL.Event = new ICAL.Event(vevent);
+        const event = new ICAL.Event(vevent);
         let startDate = this.convertToDate(event.startDate);
         let endDate = this.convertToDate(event.endDate);
 
