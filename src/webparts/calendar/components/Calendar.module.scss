@@ -49,9 +49,12 @@
 }
 
 .webPartTitle {
-  color: #fff !important;
-  height: 32px;
-  padding: 5px;
+  color: #fff!important;
+  height: 38px;
+  padding: 6px 33px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
 }
 
 /* Added styles for days within the same month/week */

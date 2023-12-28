@@ -2,29 +2,32 @@ import * as React from "react";
 import styles from "./Calendar.module.scss";
 import { ICalendarProps } from "./ICalendarProps";
 import { escape } from "@microsoft/sp-lodash-subset";
-import { WebPartTitle } from "@pnp/spfx-controls-react/lib/WebPartTitle";
+// import { WebPartTitle } from "@pnp/spfx-controls-react/lib/WebPartTitle";
 import * as moment from "moment";
 // import * as strings from "CalendarWebPartStrings";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid"; // a plugin!
+// import FullCalendar from "@fullcalendar/react";
+// import dayGridPlugin from "@fullcalendar/daygrid"; // a plugin!
 // require("./calendar.css");
 import {
   css,
-  // FontIcon,
+  FontIcon,
   MessageBar,
   MessageBarType,
   Spinner,
   SpinnerSize,
+  Text,
 } from "office-ui-fabric-react";
 import { Placeholder } from "@pnp/spfx-controls-react/lib/Placeholder";
 import { IDateTimeFieldValue } from "@pnp/spfx-property-controls/lib/PropertyFieldDateTimePicker";
-// import {
-//   Calendar as MyCalendar,
-//   EventWrapperProps,
-//   momentLocalizer,
-//   ToolbarProps,
-// } from "react-big-calendar";
+import {
+  Calendar as MyCalendar,
+  DayPropGetter,
+  EventPropGetter,
+  // EventWrapperProps,
+  momentLocalizer,
+  ToolbarProps,
+} from "react-big-calendar";
 import { IEventData } from "./Interfaces/IEventData";
 import { ICalendarEvent } from "./Interfaces/ICalendarEvent";
 import { IUserPermissions } from "./Interfaces/IUserPermissions";
@@ -32,11 +35,12 @@ import { PermissionKind } from "@pnp/sp/security";
 // import parseRecurrentEvent from "./services/parseRecurrentEvent";
 import { DisplayMode } from "@microsoft/sp-core-library";
 import EventsComponent from "./EventsComponent";
+// import CustomEvent from "./CustomEvent";
 
 interface ICalendarState {
   showDialog: boolean;
-  eventData: ICalendarEvent[];
-  selectedEvent: IEventData;
+  eventData: IEventData[];
+  selectedEvent: IEventData | null;
   startDateSlot?: Date;
   endDateSlot?: Date;
   isloading: boolean;
@@ -47,7 +51,7 @@ interface ICalendarState {
   calenderIsLoading: boolean;
 }
 
-// const localizer = momentLocalizer(moment);
+const localizer = momentLocalizer(moment);
 
 export default class Calendar extends React.Component<
   ICalendarProps,
@@ -605,6 +609,8 @@ export default class Calendar extends React.Component<
             EndDate: new Date(localEndDate),
             color: e[colorColumnName],
             fAllDayEvent: isAllDay,
+            Description: e["Description"],
+            Category: e["Category"]
           });
         })
       );
@@ -619,7 +625,132 @@ export default class Calendar extends React.Component<
     }
   }
 
-  public getFeedsEvents = ({
+  // public async getAllEvents(listId: string, eventStartDate: Date, eventEndDate: Date): Promise<IEventData[]> {
+  //   const { siteUrl } = this;
+  //   const { sp } = this.props;
+  //   let events: IEventData[] = [];
+  //   if (!siteUrl) {
+  //     return [];
+  //   }
+  //   try {
+  //     // Get Category Field Choices
+  //     const categoryDropdownOption = await this.getChoiceFieldOptions(siteUrl, listId, 'Category');
+  //     let categoryColor: { category: string, color: string }[] = [];
+  //     for (const cat of categoryDropdownOption) {
+  //       categoryColor.push({ category: cat.text, color: await this.colorGenerate() });
+  //     }
+
+  //     const web = sp.web;
+  //     const results = await web.lists.getById(listId).renderListDataAsStream(
+  //       {
+  //         DatesInUtc: true,
+  //         ViewXml: `<View><ViewFields><FieldRef Name='RecurrenceData'/><FieldRef Name='Duration'/><FieldRef Name='Author'/><FieldRef Name='Category'/><FieldRef Name='Description'/><FieldRef Name='ParticipantsPicker'/><FieldRef Name='Geolocation'/><FieldRef Name='ID'/><FieldRef Name='EndDate'/><FieldRef Name='EventDate'/><FieldRef Name='ID'/><FieldRef Name='Location'/><FieldRef Name='Title'/><FieldRef Name='fAllDayEvent'/><FieldRef Name='EventType'/><FieldRef Name='UID' /><FieldRef Name='fRecurrence' /></ViewFields>
+  //         <Query>
+  //         <Where>
+  //           <And>
+  //             <Geq>
+  //               <FieldRef Name='EventDate' />
+  //               <Value IncludeTimeValue='false' Type='DateTime'>${moment(eventStartDate).format('YYYY-MM-DD')}</Value>
+  //             </Geq>
+  //             <Leq>
+  //               <FieldRef Name='EventDate' />
+  //               <Value IncludeTimeValue='false' Type='DateTime'>${moment(eventEndDate).format('YYYY-MM-DD')}</Value>
+  //             </Leq>
+  //             </And>
+  //         </Where>
+  //         <OrderBy>
+  //           <FieldRef Name='EventDate' Ascending='True' />
+  //         </OrderBy>
+  //         </Query>
+  //         <RowLimit Paged=\"FALSE\">2000</RowLimit>
+  //         </View>`
+  //       }
+  //     );
+
+  //     if (results && results.Row.length > 0) {
+  //       let event: any = '';
+  //       const mapEvents = async () : Promise<boolean> => {
+  //           for (event of results.Row) {
+  //             const eventDate = await this.getLocalTime(event.EventDate);
+  //             const endDate = await this.getLocalTime(event.EndDate);
+  //             const initialsArray: string[] = event.Author[0].title.split(' ');
+  //             const initials: string = initialsArray[0].charAt(0) + initialsArray[initialsArray.length - 1].charAt(0);
+  //             const userPictureUrl = await this.getUserProfilePictureUrl(`i:0#.f|membership|${event.Author[0].email}`);
+  //             const attendees: number[] = [];
+  //             const first: number = event.Geolocation.indexOf('(') + 1;
+  //             const last: number = event.Geolocation.indexOf(')');
+  //             const geo = event.Geolocation.substring(first, last);
+  //             const geolocation = geo.split(' ');
+  //             const CategoryColorValue: any[] = categoryColor.filter((value) => {
+  //               return value.category == event.Category;
+  //             });
+  //             const isAllDayEvent: boolean = event["fAllDayEvent.value"] === "1";
+
+  //             for (const attendee of event.ParticipantsPicker) {
+  //               attendees.push(parseInt(attendee.id));
+  //             }
+
+  //             events.push({
+  //               Id: event.ID,
+  //               ID: event.ID,
+  //               EventType: event.EventType,
+  //               title: await this.deCodeHtmlEntities(event.Title),
+  //               Description: event.Description,
+  //               EventDate: isAllDayEvent ? new Date(event.EventDate.slice(0, -1)) : new Date(eventDate),
+  //               EndDate: isAllDayEvent ? new Date(event.EndDate.slice(0, -1)) : new Date(endDate),
+  //               location: event.Location,
+  //               ownerEmail: event.Author[0].email,
+  //               ownerPhoto: userPictureUrl ?
+  //                 `https://outlook.office365.com/owa/service.svc/s/GetPersonaPhoto?email=${event.Author[0].email}&UA=0&size=HR96x96` : '',
+  //               ownerInitial: initials,
+  //               color: CategoryColorValue.length > 0 ? CategoryColorValue[0].color : '#1a75ff', // blue default
+  //               ownerName: event.Author[0].title,
+  //               attendes: attendees,
+  //               fAllDayEvent: isAllDayEvent,
+  //               geolocation: { Longitude: parseFloat(geolocation[0]), Latitude: parseFloat(geolocation[1]) },
+  //               Category: event.Category,
+  //               Duration: event.Duration,
+  //               RecurrenceData: event.RecurrenceData ? await this.deCodeHtmlEntities(event.RecurrenceData) : "",
+  //               fRecurrence: event.fRecurrence,
+  //               RecurrenceID: event.RecurrenceID ? event.RecurrenceID : undefined,
+  //               MasterSeriesItemID: event.MasterSeriesItemID,
+  //               UID: event.UID.replace("{", "").replace("}", ""),
+  //             });
+  //           }
+  //         return true;
+  //       };
+  //       //Checks to see if there are any results saved in local storage
+  //       if(window.localStorage.getItem("eventResult")){
+  //         //if there is a local version - compares it to the current version 
+  //         if(window.localStorage.getItem("eventResult") === JSON.stringify(results)){
+  //           //No update needed use current savedEvents
+  //           events = JSON.parse(window.localStorage.getItem("calendarEventsWithLocalTime"));
+  //         }else{
+  //           //update local storage
+  //           window.localStorage.setItem("eventResult", JSON.stringify(results));
+  //           //when they are not equal then we loop through the results and maps them to IEventData
+  //           /* tslint:disable:no-unused-expression */
+  //           await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;           
+  //         }
+  //       }else{
+  //         //if there is no local storage of the events we create them
+  //         window.localStorage.setItem("eventResult", JSON.stringify(results));
+  //         //we also needs to map through the events the first time and save the mapped version to local storage
+  //         await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;           
+  //       }
+  //     }
+  //     let parseEvt: parseRecurrentEvent = new parseRecurrentEvent();
+  //     events = parseEvt.parseEvents(events, null, null);
+       
+  //     // Return Data
+  //     return events;
+  //   } catch (error) {
+  //     console.dir(error);
+  //     return Promise.reject(error);
+  //   }
+  // }
+
+  public convertEventsDataToFeedsEventsData = ({
     calEvents,
   }: {
     calEvents: IEventData[];
@@ -685,6 +816,8 @@ export default class Calendar extends React.Component<
 
       const eventsData: IEventData[] = await this.getAllEvents(
         escape(list),
+        // this.eventStartDate.value,
+        // this.eventEndDate.value
         list1column1,
         list1column2,
         list1column3,
@@ -692,12 +825,12 @@ export default class Calendar extends React.Component<
         list1column5
       );
 
-      const eventsDataNewFormat: ICalendarEvent[] = this.getFeedsEvents({
-        calEvents: eventsData,
-      });
+      // const eventsDataNewFormat: ICalendarEvent[] = this.convertEventsDataToFeedsEventsData({
+      //   calEvents: eventsData,
+      // });
 
       if (DisplayMode.Edit === displayMode) {
-        console.log("Events data", eventsDataNewFormat);
+        console.log("Events data", eventsData);
       }
 
       if (showEventsFeedsWP) {
@@ -720,19 +853,19 @@ export default class Calendar extends React.Component<
           );
         }
 
-        const calendarFeedsEvents: ICalendarEvent[] = this.getFeedsEvents({
+        const calendarFeedsEvents: ICalendarEvent[] = this.convertEventsDataToFeedsEventsData({
           calEvents: feedEventsData,
         });
 
         this.setState({
-          eventData: eventsDataNewFormat,
+          eventData: eventsData,
           hasError: false,
           errorMessage: "",
           feedsEvents: calendarFeedsEvents,
         });
       } else {
         this.setState({
-          eventData: eventsDataNewFormat,
+          eventData: eventsData,
           hasError: false,
           errorMessage: "",
         });
@@ -747,76 +880,158 @@ export default class Calendar extends React.Component<
     }
   }
 
-  // private MyCustomHeader: React.FC<ToolbarProps> = ({ label, onNavigate }) => {
-  //   const { headerColor, list, displayMode } = this.props;
-  //   const { siteUrl } = this;
+  private MyCustomHeader: React.FC<ToolbarProps> = ({ label, onNavigate }) => {
+    const { headerColor, list, displayMode,
+      list1column1,
+      list1column2,
+      list1column3,
+      list1column4,
+      list1column5 } = this.props;
 
-  //   const handlePrev = async () => {
-  //     this.setState({
-  //       calenderIsLoading: true
-  //     });
-  //     const currentAddCount = this.state.monthAddCount - 1;
-  //     this.eventStartDate = { value: moment().add(currentAddCount, 'months').startOf('month').subtract(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-  //     this.eventEndDate = { value: moment().add(currentAddCount, 'months').endOf('month').add(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
+    const handlePrev = async () => {
+      onNavigate('PREV');
+      // this.setState({
+      //   calenderIsLoading: true
+      // });
+      const currentAddCount = this.state.monthAddCount - 1;
+      this.eventStartDate = { value: moment().add(currentAddCount, 'months').startOf('month').subtract(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
+      this.eventEndDate = { value: moment().add(currentAddCount, 'months').endOf('month').add(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
 
-  //     const eventsData: IEventData[] = await this.getEvents(
-  //       escape(siteUrl),
-  //       escape(list),
-  //       this.eventStartDate.value,
-  //       this.eventEndDate.value
-  //     );
+      const eventsData: IEventData[] = await this.getAllEvents(
+        // escape(siteUrl),
+        escape(list),
+        // this.eventStartDate.value,
+        // this.eventEndDate.value
+        list1column1,
+        list1column2,
+        list1column3,
+        list1column4,
+        list1column5
+      );
 
-  //     if (DisplayMode.Edit === displayMode) {
-  //       console.log("Events data", this.eventStartDate, currentAddCount, this.eventEndDate, eventsData);
-  //     }
+      if (DisplayMode.Edit === displayMode) {
+        console.log("Events data", this.eventStartDate, currentAddCount, this.eventEndDate, eventsData);
+      }
 
-  //     this.setState({
-  //       eventData: eventsData,
-  //       monthAddCount: currentAddCount,
-  //       calenderIsLoading: false
-  //     });
+      this.setState({
+        eventData: eventsData,
+        monthAddCount: currentAddCount,
+        calenderIsLoading: false
+      });
 
-  //     onNavigate('PREV');
-  //   };
+    };
 
-  //   const handleNext = async () => {
-  //     this.setState({
-  //       calenderIsLoading: true
-  //     });
-  //     const currentAddCount = this.state.monthAddCount + 1;
-  //     this.eventStartDate = { value: moment().add(currentAddCount, 'months').startOf('month').subtract(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-  //     this.eventEndDate = { value: moment().add(currentAddCount, 'months').endOf('month').add(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
+    const handleNext = async () => {
+      onNavigate('NEXT');
+      // this.setState({
+      //   calenderIsLoading: true
+      // });
+      const currentAddCount = this.state.monthAddCount + 1;
+      this.eventStartDate = { value: moment().add(currentAddCount, 'months').startOf('month').subtract(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
+      this.eventEndDate = { value: moment().add(currentAddCount, 'months').endOf('month').add(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
 
-  //     const eventsData: IEventData[] = await this.getEvents(
-  //       escape(siteUrl),
-  //       escape(list),
-  //       this.eventStartDate.value,
-  //       this.eventEndDate.value
-  //     );
+      const eventsData: IEventData[] = await this.getAllEvents(
+        // escape(siteUrl),
+        escape(list),
+        // this.eventStartDate.value,
+        // this.eventEndDate.value
+        list1column1,
+        list1column2,
+        list1column3,
+        list1column4,
+        list1column5
+      );
 
-  //     if (DisplayMode.Edit === displayMode) {
-  //       console.log("Events data", this.eventStartDate, this.eventEndDate, currentAddCount, eventsData);
-  //     }
+      if (DisplayMode.Edit === displayMode) {
+        console.log("Events data", this.eventStartDate, this.eventEndDate, currentAddCount, eventsData);
+      }
 
-  //     onNavigate('NEXT');
 
-  //     this.setState({
-  //       eventData: eventsData,
-  //       monthAddCount: currentAddCount,
-  //       calenderIsLoading: false
-  //     });
-  //   };
+      this.setState({
+        eventData: eventsData,
+        monthAddCount: currentAddCount,
+        calenderIsLoading: false
+      });
+    };
 
+    return (
+      <div style={{ backgroundColor: headerColor, textAlign: 'center', display:'flex', flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', color:'#ffffff' }}>
+        {/* <button onClick={handlePrev}>&lt; Prev</button> */}
+        {!this.state.calenderIsLoading && <FontIcon aria-label="Compass" iconName="PageLeft" className={styles.iconStyle} onClick={handlePrev} />}
+        <Text style={{color:'#fff', fontSize:18, padding: 10}}>{label}</Text>
+        {!this.state.calenderIsLoading && <FontIcon aria-label="Compass" iconName="PageRight" className={styles.iconStyle} onClick={handleNext} />}
+        {/* <button onClick={handleNext}>Next &gt;</button> */}
+      </div>
+    );
+  }
+
+  // private MyEventWrapper: React.FC<EventWrapperProps> = ({ children, event }) => {
   //   return (
-  //     <div style={{ backgroundColor: headerColor, textAlign: 'center', display:'flex', flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', color:'#ffffff' }}>
-  //       {/* <button onClick={handlePrev}>&lt; Prev</button> */}
-  //       {!this.state.calenderIsLoading && <FontIcon aria-label="Compass" iconName="PageLeft" className={styles.iconStyle} onClick={handlePrev} />}
-  //       <h2 style={{color:'#fff'}}>{label}</h2>
-  //       {!this.state.calenderIsLoading && <FontIcon aria-label="Compass" iconName="PageRight" className={styles.iconStyle} onClick={handleNext} />}
-  //       {/* <button onClick={handleNext}>Next &gt;</button> */}
+  //     <div style={{ position: 'relative' }}>
+  //       {children}
+  //       {event && (
+  //         <div
+  //           style={{
+  //             position: 'absolute',
+  //             top: '50%',
+  //             left: '50%',
+  //             transform: 'translate(-50%, -50%)',
+  //             width: '8px',
+  //             height: '8px',
+  //             borderRadius: '50%',
+  //             backgroundColor: this.props.calendarCellColor // Change the color as needed
+  //           }}
+  //         />
+  //       )}
   //     </div>
   //   );
-  // }
+  // };
+
+  private dayPropGetter: DayPropGetter = (date: Date): { style?: React.CSSProperties; className?: string } => {
+    const today = moment();
+    const isToday = today.isSame(date, 'day');
+  
+    return {
+      style: {
+        backgroundColor: isToday ? this.props.headerColor : 'inherit',
+      },
+    };
+  };
+
+  public eventStyleGetter: EventPropGetter<IEventData> = (event, start, end, isSelected): any => {
+    
+    return {
+      style: {
+        backgroundColor: event.color,
+        borderColor: "gray",
+        color: "transparent",
+        borderRadius: "10",
+        display: "flex",
+        width:8,
+        alignItems: "center",
+        justifyContent: "center",
+        height: 10
+      }
+    };
+  }
+
+  private handleEventClick = (event: IEventData, e: React.SyntheticEvent) => {
+    // Prevent the default behavior to avoid interference with the tooltip
+    const {selectedEvent} = this.state;
+    e.preventDefault();
+    if (DisplayMode.Edit === this.props.displayMode) {
+      console.log("Opened item", event);
+    }
+    this.setState({
+      selectedEvent: selectedEvent === event ? null : event
+    });
+  };
+
+  private handleCloseTooltip = () => {
+    this.setState({
+      selectedEvent: null
+    });
+  };
 
   public render(): React.ReactElement<ICalendarProps> {
     const { showEventsFeedsWP } = this.props;
@@ -825,12 +1040,13 @@ export default class Calendar extends React.Component<
     return (
       <div className={styles.calendar} style={{ backgroundColor: "white" }}>
         <div style={{ backgroundColor: this.props.headingTitleColor }}>
-          <WebPartTitle
+          <Text className={styles.webPartTitle}>{this.props.title}</Text>
+          {/* <WebPartTitle
             displayMode={this.props.displayMode}
             title={this.props.title}
             className={styles.webPartTitle}
             updateProperty={this.props.updateTitleProperty}
-          />
+          /> */}
         </div>
         {!this.props.list ||
         (!this.props.list2 && showEventsFeedsWP) ||
@@ -864,28 +1080,30 @@ export default class Calendar extends React.Component<
               <div className={css(styles.container, styles.msGrid)}>
                 <div className={styles.msGridRow}>
                   <div className={showEventsFeedsWP ? styles.msGridCol : ""}>
-                    {/* <MyCalendar
-                        // dayPropGetter={this.dayPropGetter.bind(this)}
+                    <MyCalendar
+                        dayPropGetter={this.dayPropGetter.bind(this)}
                         localizer={localizer}
-
                         selectable
                         events={this.state.eventData}
                         startAccessor="EventDate"
                         endAccessor="EndDate"
-                        // eventPropGetter={this.eventStyleGetter.bind(this)}
+                        eventPropGetter={this.eventStyleGetter.bind(this)}
                         onSelectSlot={this.onSelectSlot.bind(this)}
                         defaultView="month"
                         view="month"
                         views={["month"]}
+                        allDayMaxRows={1}
                         popup={true}
-                        style={{ minHeight: 320 }}
+                        style={{ minHeight: 350 }}
+                        onSelectEvent={this.handleEventClick.bind(this)}
                         components={{
                           toolbar: this.MyCustomHeader.bind(this),
                           // eventWrapper: this.MyEventWrapper.bind(this),
+                          // event: CustomEvent
                         }}
                         defaultDate={moment().startOf("day").toDate()}
-                      />                       */}
-                    <FullCalendar
+                      />
+                    {/* <FullCalendar
                       plugins={[dayGridPlugin]}
                       initialView="dayGridMonth"
                       events={this.state.eventData}
@@ -897,10 +1115,8 @@ export default class Calendar extends React.Component<
                         end: "",
                         right: "next",
                       }}
-                      // dayMaxEvents={1}
-                      dayMaxEventRows={1}
-                      
-                    />
+                      dayMaxEventRows={1}                      
+                    /> */}
                   </div>
                   {showEventsFeedsWP && (
                     <div className={styles.msGridCol}>
@@ -920,6 +1136,31 @@ export default class Calendar extends React.Component<
                 </div>
               </div>
             )}
+          </div>
+        )}
+        {this.state.selectedEvent && (
+          <div className="tooltipa" style={
+            { 
+              position:'absolute',
+              top: 195,
+              left: 200,
+              backgroundColor: this.props.headerColor,
+              height: 100,
+              zIndex: 1000,
+              padding:10,
+              maxWidth:300,
+              minWidth:150
+            }
+          }>
+            <div>
+              <FontIcon iconName="Cancel" className={styles.iconStyle} onClick={this.handleCloseTooltip} style={{float:'right'}} />
+            </div>
+            <div>
+              <Text style={{fontWeight:'bold'}}>{this.state.selectedEvent.title}</Text>
+            </div>
+            <div>
+              <p dangerouslySetInnerHTML={{__html:this.state.selectedEvent.Description}}></p>
+            </div>
           </div>
         )}
         {/* {
