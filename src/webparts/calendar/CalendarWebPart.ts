@@ -197,12 +197,6 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
                   iconName: 'Precipitation',
                   key: 'headerTitleColorFieldId'
                 }),
-                // PropertyPaneTextField('siteUrl', {
-                //   label: strings.SiteUrlFieldLabel,
-                //   onGetErrorMessage: this.onSiteUrlGetErrorMessage.bind(this),
-                //   value: this.context.pageContext.site.absoluteUrl,
-                //   deferredValidationTime: 1200,
-                // }),
                 PropertyFieldListPicker('list', {
                   label: 'Select list',
                   selectedList: this.properties.list,
@@ -291,53 +285,7 @@ export default class CalendarWebPart extends BaseClientSideWebPart<ICalendarWebP
                   key: 'columnPickerFieldId4',
                   displayHiddenColumns: false,
                   columnReturnProperty: IColumnReturnProperty["Internal Name"]
-                }),
-                // PropertyFieldDateTimePicker('eventStartDate', {
-                //   label: 'From',
-                //   initialDate: this.properties.eventStartDate,
-                //   dateConvention: DateConvention.Date,
-                //   onPropertyChange: this.onPropertyPaneFieldChanged,
-                //   properties: this.properties,
-                //   onGetErrorMessage: this.onEventStartDateValidation,
-                //   deferredValidationTime: 0,
-                //   key: 'eventStartDateId'
-                // }),
-                // PropertyFieldDateTimePicker('eventEndDate', {
-                //   label: 'to',
-                //   initialDate:  this.properties.eventEndDate,
-                //   dateConvention: DateConvention.Date,
-                //   onPropertyChange: this.onPropertyPaneFieldChanged,
-                //   properties: this.properties,
-                //   onGetErrorMessage:  this.onEventEndDateValidation,
-                //   deferredValidationTime: 0,
-                //   key: 'eventEndDateId'
-                // }),
-                // PropertyFieldColorPicker('headerColor', {
-                //   label: 'Calendar header background color',
-                //   selectedColor: this.properties.headerColor,
-                //   onPropertyChange: this.onPropertyPaneFieldChanged,
-                //   properties: this.properties,
-                //   disabled: false,
-                //   // debounce: 100,
-                //   isHidden: false,
-                //   alphaSliderHidden: true,
-                //   style: PropertyFieldColorPickerStyle.Inline,
-                //   iconName: 'Precipitation',
-                //   key: 'headerColorFieldId'
-                // })
-                // PropertyFieldColorPicker('calendarCellColor', {
-                //   label: 'Calender cell color',
-                //   selectedColor: this.properties.calendarCellColor,
-                //   onPropertyChange: this.onPropertyPaneFieldChanged,
-                //   properties: this.properties,
-                //   disabled: false,
-                //   // debounce: 100,
-                //   isHidden: false,
-                //   alphaSliderHidden: true,
-                //   style: PropertyFieldColorPickerStyle.Inline,
-                //   iconName: 'Precipitation',
-                //   key: 'calendarCellColorFieldId'
-                // })
+                })
               ]
             }
           ]
