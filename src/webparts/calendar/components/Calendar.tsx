@@ -10,6 +10,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 // import dayGridPlugin from "@fullcalendar/daygrid"; // a plugin!
 // require("./calendar.css");
 import {
+  // addDays,
   css,
   FontIcon,
   MessageBar,
@@ -35,6 +36,7 @@ import { PermissionKind } from "@pnp/sp/security";
 // import parseRecurrentEvent from "./services/parseRecurrentEvent";
 import { DisplayMode } from "@microsoft/sp-core-library";
 import EventsComponent from "./EventsComponent";
+import Tooltip from "./Tooltip";
 // import CustomEvent from "./CustomEvent";
 
 interface ICalendarState {
@@ -59,19 +61,20 @@ export default class Calendar extends React.Component<
 > {
   private userListPermissions: IUserPermissions = undefined;
   private siteUrl: string = this.props.context.pageContext.web.absoluteUrl;
-  private eventStartDate: IDateTimeFieldValue = {
+
+  private calEventStartDate: IDateTimeFieldValue = {
     value: moment().startOf("month").subtract(7, "days").toDate(),
     displayValue: moment().format("ddd MMM MM YYYY"),
   };
-  private eventEndDate: IDateTimeFieldValue = {
+  private calEventEndDate: IDateTimeFieldValue = {
     value: moment().endOf("month").add(7, "days").toDate(),
     displayValue: moment().format("ddd MMM MM YYYY"),
   };
-  private eventStartDate2: IDateTimeFieldValue = {
-    value: moment().add(1, "days").toDate(),
+  private eventFeedsStartDate: IDateTimeFieldValue = {
+    value: moment().add(1, "minutes").toDate(),
     displayValue: moment().format("ddd MMM MM YYYY"),
   };
-  private eventEndDate2: IDateTimeFieldValue = {
+  private eventFeedsEndDate: IDateTimeFieldValue = {
     value: moment().add(5, "years").endOf("month").toDate(),
     displayValue: moment().format("ddd MMM MM YYYY"),
   };
@@ -536,7 +539,16 @@ export default class Calendar extends React.Component<
       return [];
     }
     try {
-      const results = await sp.web.lists.getById(listId).items.filter(`${startDateColumnName} ge '${moment(eventStartDate).format('YYYY-MM-DD')}' and ${endDateColumnName} le '${moment(eventEndDate).format('YYYY-MM-DD')}'`).orderBy(startDateColumnName, true)();
+      const results = await sp.web.lists
+        .getById(listId)
+        .items.filter(
+          `${startDateColumnName} ge '${moment(eventStartDate).format(
+            "YYYY-MM-DD"
+          )}' and ${endDateColumnName} le '${moment(eventEndDate).format(
+            "YYYY-MM-DD"
+          )}'`
+        )
+        .orderBy(startDateColumnName, true)();
 
       if (DisplayMode.Edit === this.props.displayMode) {
         console.log("Results", results);
@@ -566,7 +578,7 @@ export default class Calendar extends React.Component<
       return events;
     } catch (error) {
       if (DisplayMode.Edit === this.props.displayMode) {
-        console.dir(error);        
+        console.dir(error);
       }
       return Promise.reject(error);
     }
@@ -587,7 +599,9 @@ export default class Calendar extends React.Component<
       return [];
     }
     try {
-      const results = await sp.web.lists.getById(listId).items.orderBy(startDateColumnName, true)();
+      const results = await sp.web.lists
+        .getById(listId)
+        .items.orderBy(startDateColumnName, true)();
 
       if (DisplayMode.Edit === this.props.displayMode) {
         console.log("Results", results);
@@ -610,7 +624,8 @@ export default class Calendar extends React.Component<
             color: e[colorColumnName],
             fAllDayEvent: isAllDay,
             Description: e["Description"],
-            Category: e["Category"]
+            Category: e["Category"],
+            fRecurrence: e["fRecurrence"]
           });
         })
       );
@@ -619,7 +634,7 @@ export default class Calendar extends React.Component<
       return events;
     } catch (error) {
       if (DisplayMode.Edit === this.props.displayMode) {
-        console.dir(error);        
+        console.dir(error);
       }
       return Promise.reject(error);
     }
@@ -721,7 +736,7 @@ export default class Calendar extends React.Component<
   //       };
   //       //Checks to see if there are any results saved in local storage
   //       if(window.localStorage.getItem("eventResult")){
-  //         //if there is a local version - compares it to the current version 
+  //         //if there is a local version - compares it to the current version
   //         if(window.localStorage.getItem("eventResult") === JSON.stringify(results)){
   //           //No update needed use current savedEvents
   //           events = JSON.parse(window.localStorage.getItem("calendarEventsWithLocalTime"));
@@ -730,18 +745,18 @@ export default class Calendar extends React.Component<
   //           window.localStorage.setItem("eventResult", JSON.stringify(results));
   //           //when they are not equal then we loop through the results and maps them to IEventData
   //           /* tslint:disable:no-unused-expression */
-  //           await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;           
+  //           await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;
   //         }
   //       }else{
   //         //if there is no local storage of the events we create them
   //         window.localStorage.setItem("eventResult", JSON.stringify(results));
   //         //we also needs to map through the events the first time and save the mapped version to local storage
-  //         await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;           
+  //         await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;
   //       }
   //     }
   //     let parseEvt: parseRecurrentEvent = new parseRecurrentEvent();
   //     events = parseEvt.parseEvents(events, null, null);
-       
+
   //     // Return Data
   //     return events;
   //   } catch (error) {
@@ -766,17 +781,20 @@ export default class Calendar extends React.Component<
           title: item.title,
           start: item.EventDate,
           end: item.EndDate,
-          backgroundColor: item.color === undefined || item.color === null ? "#000" : item.color,
+          backgroundColor:
+            item.color === undefined || item.color === null
+              ? "#000"
+              : item.color,
           allDay: item.fAllDayEvent,
           category: undefined,
           description: undefined,
-          location: undefined
+          location: undefined,
         };
         return eventItem;
       });
       // Return the calendar items
       return events;
-    } catch (error) {      
+    } catch (error) {
       if (DisplayMode.Edit === this.props.displayMode) {
         console.log("Exception caught by catch in SharePoint provider", error);
       }
@@ -836,8 +854,8 @@ export default class Calendar extends React.Component<
       if (showEventsFeedsWP) {
         const feedEventsData: IEventData[] = await this.getSpecificEvents(
           escape(list2),
-          this.eventStartDate2.value,
-          this.eventEndDate2.value,
+          this.eventFeedsStartDate.value,
+          this.eventFeedsEndDate.value,
           list2column1,
           list2column2,
           list2column3,
@@ -849,13 +867,14 @@ export default class Calendar extends React.Component<
           console.log(
             "Feed Events data",
             feedEventsData,
-            this.eventStartDate2.value
+            this.eventFeedsStartDate.value
           );
         }
 
-        const calendarFeedsEvents: ICalendarEvent[] = this.convertEventsDataToFeedsEventsData({
-          calEvents: feedEventsData,
-        });
+        const calendarFeedsEvents: ICalendarEvent[] =
+          this.convertEventsDataToFeedsEventsData({
+            calEvents: feedEventsData,
+          });
 
         this.setState({
           eventData: eventsData,
@@ -881,21 +900,39 @@ export default class Calendar extends React.Component<
   }
 
   private MyCustomHeader: React.FC<ToolbarProps> = ({ label, onNavigate }) => {
-    const { headerColor, list, displayMode,
+    const {
+      headerColor,
+      list,
+      displayMode,
       list1column1,
       list1column2,
       list1column3,
       list1column4,
-      list1column5 } = this.props;
+      list1column5,
+    } = this.props;
 
     const handlePrev = async () => {
-      onNavigate('PREV');
+      onNavigate("PREV");
       // this.setState({
       //   calenderIsLoading: true
       // });
       const currentAddCount = this.state.monthAddCount - 1;
-      this.eventStartDate = { value: moment().add(currentAddCount, 'months').startOf('month').subtract(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-      this.eventEndDate = { value: moment().add(currentAddCount, 'months').endOf('month').add(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
+      this.calEventStartDate = {
+        value: moment()
+          .add(currentAddCount, "months")
+          .startOf("month")
+          .subtract(7, "days")
+          .toDate(),
+        displayValue: moment().format("ddd MMM MM YYYY"),
+      };
+      this.calEventEndDate = {
+        value: moment()
+          .add(currentAddCount, "months")
+          .endOf("month")
+          .add(7, "days")
+          .toDate(),
+        displayValue: moment().format("ddd MMM MM YYYY"),
+      };
 
       const eventsData: IEventData[] = await this.getAllEvents(
         // escape(siteUrl),
@@ -910,25 +947,44 @@ export default class Calendar extends React.Component<
       );
 
       if (DisplayMode.Edit === displayMode) {
-        console.log("Events data", this.eventStartDate, currentAddCount, this.eventEndDate, eventsData);
+        console.log(
+          "Events data",
+          this.calEventStartDate,
+          currentAddCount,
+          this.calEventEndDate,
+          eventsData
+        );
       }
 
       this.setState({
         eventData: eventsData,
         monthAddCount: currentAddCount,
-        calenderIsLoading: false
+        calenderIsLoading: false,
       });
-
     };
 
     const handleNext = async () => {
-      onNavigate('NEXT');
+      onNavigate("NEXT");
       // this.setState({
       //   calenderIsLoading: true
       // });
       const currentAddCount = this.state.monthAddCount + 1;
-      this.eventStartDate = { value: moment().add(currentAddCount, 'months').startOf('month').subtract(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
-      this.eventEndDate = { value: moment().add(currentAddCount, 'months').endOf('month').add(7,'days').toDate(), displayValue: moment().format('ddd MMM MM YYYY')};
+      this.calEventStartDate = {
+        value: moment()
+          .add(currentAddCount, "months")
+          .startOf("month")
+          .subtract(7, "days")
+          .toDate(),
+        displayValue: moment().format("ddd MMM MM YYYY"),
+      };
+      this.calEventEndDate = {
+        value: moment()
+          .add(currentAddCount, "months")
+          .endOf("month")
+          .add(7, "days")
+          .toDate(),
+        displayValue: moment().format("ddd MMM MM YYYY"),
+      };
 
       const eventsData: IEventData[] = await this.getAllEvents(
         // escape(siteUrl),
@@ -943,27 +999,58 @@ export default class Calendar extends React.Component<
       );
 
       if (DisplayMode.Edit === displayMode) {
-        console.log("Events data", this.eventStartDate, this.eventEndDate, currentAddCount, eventsData);
+        console.log(
+          "Events data",
+          this.calEventStartDate,
+          this.calEventEndDate,
+          currentAddCount,
+          eventsData
+        );
       }
-
 
       this.setState({
         eventData: eventsData,
         monthAddCount: currentAddCount,
-        calenderIsLoading: false
+        calenderIsLoading: false,
       });
     };
 
     return (
-      <div style={{ backgroundColor: headerColor, textAlign: 'center', display:'flex', flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', color:'#ffffff' }}>
+      <div
+        style={{
+          backgroundColor: headerColor,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-evenly",
+          alignItems: "center",
+          color: "#ffffff",
+        }}
+      >
         {/* <button onClick={handlePrev}>&lt; Prev</button> */}
-        {!this.state.calenderIsLoading && <FontIcon aria-label="Compass" iconName="PageLeft" className={styles.iconStyle} onClick={handlePrev} />}
-        <Text style={{color:'#fff', fontSize:18, padding: 10}}>{label}</Text>
-        {!this.state.calenderIsLoading && <FontIcon aria-label="Compass" iconName="PageRight" className={styles.iconStyle} onClick={handleNext} />}
+        {!this.state.calenderIsLoading && (
+          <FontIcon
+            aria-label="Compass"
+            iconName="PageLeft"
+            className={styles.iconStyle}
+            onClick={handlePrev}
+          />
+        )}
+        <Text style={{ color: "#fff", fontSize: 18, padding: 10 }}>
+          {label}
+        </Text>
+        {!this.state.calenderIsLoading && (
+          <FontIcon
+            aria-label="Compass"
+            iconName="PageRight"
+            className={styles.iconStyle}
+            onClick={handleNext}
+          />
+        )}
         {/* <button onClick={handleNext}>Next &gt;</button> */}
       </div>
     );
-  }
+  };
 
   // private MyEventWrapper: React.FC<EventWrapperProps> = ({ children, event }) => {
   //   return (
@@ -987,19 +1074,30 @@ export default class Calendar extends React.Component<
   //   );
   // };
 
-  private dayPropGetter: DayPropGetter = (date: Date): { style?: React.CSSProperties; className?: string } => {
+  private dayPropGetter: DayPropGetter = (
+    date: Date
+  ): { style?: React.CSSProperties; className?: string } => {
     const today = moment();
-    const isToday = today.isSame(date, 'day');
-  
+    const isToday = today.isSame(date, "day");
+
     return {
       style: {
-        backgroundColor: isToday ? this.props.headerColor : 'inherit',
+        backgroundColor: isToday ? this.props.headerColor : "inherit",
       },
     };
   };
 
-  public eventStyleGetter: EventPropGetter<IEventData> = (event, start, end, isSelected): any => {
-    
+  public eventStyleGetter: EventPropGetter<IEventData> = (
+    event,
+    start,
+    end,
+    isSelected
+  ): any => {
+    const { displayMode } = this.props;
+    if (displayMode === DisplayMode.Edit) {
+      console.log("Events dates", event);
+    }
+
     return {
       style: {
         backgroundColor: event.color,
@@ -1007,29 +1105,28 @@ export default class Calendar extends React.Component<
         color: "transparent",
         borderRadius: "10",
         display: "flex",
-        width:8,
         alignItems: "center",
         justifyContent: "center",
-        height: 10
-      }
+        height: 10,
+      },
     };
-  }
+  };
 
   private handleEventClick = (event: IEventData, e: React.SyntheticEvent) => {
     // Prevent the default behavior to avoid interference with the tooltip
-    const {selectedEvent} = this.state;
+    const { selectedEvent } = this.state;
     e.preventDefault();
     if (DisplayMode.Edit === this.props.displayMode) {
       console.log("Opened item", event);
     }
     this.setState({
-      selectedEvent: selectedEvent === event ? null : event
+      selectedEvent: selectedEvent === event ? null : event,
     });
   };
 
   private handleCloseTooltip = () => {
     this.setState({
-      selectedEvent: null
+      selectedEvent: null,
     });
   };
 
@@ -1055,8 +1152,8 @@ export default class Calendar extends React.Component<
         !this.props.list1column3 ||
         !this.props.list1column4 ||
         !this.props.list1column5 ||
-        !this.eventStartDate.value ||
-        !this.eventEndDate.value ? (
+        !this.calEventStartDate.value ||
+        !this.calEventEndDate.value ? (
           <Placeholder
             iconName="Edit"
             iconText={"Configure your Calendar Web Part"}
@@ -1081,28 +1178,29 @@ export default class Calendar extends React.Component<
                 <div className={styles.msGridRow}>
                   <div className={showEventsFeedsWP ? styles.msGridCol : ""}>
                     <MyCalendar
-                        dayPropGetter={this.dayPropGetter.bind(this)}
-                        localizer={localizer}
-                        selectable
-                        events={this.state.eventData}
-                        startAccessor="EventDate"
-                        endAccessor="EndDate"
-                        eventPropGetter={this.eventStyleGetter.bind(this)}
-                        onSelectSlot={this.onSelectSlot.bind(this)}
-                        defaultView="month"
-                        view="month"
-                        views={["month"]}
-                        allDayMaxRows={1}
-                        popup={true}
-                        style={{ minHeight: 350 }}
-                        onSelectEvent={this.handleEventClick.bind(this)}
-                        components={{
-                          toolbar: this.MyCustomHeader.bind(this),
-                          // eventWrapper: this.MyEventWrapper.bind(this),
-                          // event: CustomEvent
-                        }}
-                        defaultDate={moment().startOf("day").toDate()}
-                      />
+                      dayPropGetter={this.dayPropGetter.bind(this)}
+                      localizer={localizer}
+                      selectable
+                      events={this.state.eventData}
+                      titleAccessor="title"
+                      startAccessor={"EventDate"}
+                      endAccessor={"EndDate"}
+                      eventPropGetter={this.eventStyleGetter.bind(this)}
+                      onSelectSlot={this.onSelectSlot.bind(this)}
+                      defaultView="month"
+                      view="month"
+                      views={["month"]}
+                      allDayMaxRows={1}
+                      popup={true}
+                      style={{ minHeight: 350 }}
+                      onSelectEvent={this.handleEventClick.bind(this)}
+                      components={{
+                        toolbar: this.MyCustomHeader.bind(this),
+                        // eventWrapper: this.MyEventWrapper.bind(this),
+                        // event: CustomEvent
+                      }}
+                      defaultDate={moment().startOf("day").toDate()}
+                    />
                     {/* <FullCalendar
                       plugins={[dayGridPlugin]}
                       initialView="dayGridMonth"
@@ -1139,44 +1237,12 @@ export default class Calendar extends React.Component<
           </div>
         )}
         {this.state.selectedEvent && (
-          <div className="tooltipa" style={
-            { 
-              position:'absolute',
-              top: 195,
-              left: 200,
-              backgroundColor: this.props.headerColor,
-              height: 100,
-              zIndex: 1000,
-              padding:10,
-              maxWidth:300,
-              minWidth:150
-            }
-          }>
-            <div>
-              <FontIcon iconName="Cancel" className={styles.iconStyle} onClick={this.handleCloseTooltip} style={{float:'right'}} />
-            </div>
-            <div>
-              <Text style={{fontWeight:'bold'}}>{this.state.selectedEvent.title}</Text>
-            </div>
-            <div>
-              <p dangerouslySetInnerHTML={{__html:this.state.selectedEvent.Description}}></p>
-            </div>
-          </div>
+          <Tooltip
+            headerColor={this.props.headerColor}
+            handleCloseTooltip={this.handleCloseTooltip}
+            selectedEvent={this.state.selectedEvent}
+          />
         )}
-        {/* {
-            this.state.showDialog &&
-            <Event
-              event={this.state.selectedEvent}
-              panelMode={this.state.panelMode}
-              onDissmissPanel={this.onDismissPanel}
-              showPanel={this.state.showDialog}
-              startDate={this.state.startDateSlot}
-              endDate={this.state.endDateSlot}
-              context={this.props.context}
-              siteUrl={this.props.siteUrl}
-              listId={this.props.list}
-            />
-          } */}
       </div>
     );
   }
